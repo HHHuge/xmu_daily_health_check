@@ -31,6 +31,11 @@
 
 2. 安装 python 依赖
    
+   本地需要nodejs环境.  
+   ```bash
+   sudo apt-get update
+   sudo apt-get install nodejs
+   ```
    
    ```python
    pip install -r requirements.txt
@@ -60,6 +65,7 @@
 
 ```shell
 crontab -e
->>> 15 8 * * * python main.py
+# 在文件尾部添加如下指令, 即在每天上午8:15运行脚本
+15 8 * * * python main.py
 ```
 
