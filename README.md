@@ -61,7 +61,7 @@
 
 ```shell
 crontab -e
->>> 15,8,*,*,* python main.py
+>>> 15 8 * * * python main.py
 ```
 
 ``
