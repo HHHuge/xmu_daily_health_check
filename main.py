@@ -87,6 +87,10 @@ if __name__ == "__main__":
     username, password, post_data = parse_args()
     # Login to IDS
     success, client = ids_login(username, password)
+    if not success:
+        print("[ERROR] Login to IDS failed")
+        notify_user("[ERROR] Login to IDS failed")
+        exit(1)
     response = client.get(CAS_AUTH_URL, follow_redirects=True)
 
     # get the daily health check form
