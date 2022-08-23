@@ -88,7 +88,6 @@ if __name__ == "__main__":
     # Login to IDS
     success, client = ids_login(username, password)
     if not success:
-        print("[ERROR] Login to IDS failed")
         notify_user("[ERROR] Login to IDS failed")
         exit(1)
     response = client.get(CAS_AUTH_URL, follow_redirects=True)
@@ -123,8 +122,10 @@ if __name__ == "__main__":
 
     # submit the form
     my_form_instance_id = my_form_instance["data"]["id"]
+    [x for x in post_data["formData"] if x["name"] == "datetime_1611146487222"][0]["value"]["dateValue"] = \
+        time.strftime("%Y-%m-%d %H:%M:%S", last_form_instance_update_time)
     post_url = BASE_URL + f"/api/formEngine/formInstance/{my_form_instance_id}"
-    post_data = json.loads(open("submit.json", "r").read())
+    # post_data = json.loads(open("submit.json", "r").read())
     response = client.post(post_url, json=post_data)
     submit_result = response.json()["data"] == "success"
     if not submit_result:
@@ -143,6 +144,8 @@ if __name__ == "__main__":
             time.localtime().tm_mon == my_form_instance_update_time.tm_mon and \
             time.localtime().tm_mday == my_form_instance_update_time.tm_mday:
         message = "[Info] Successfully submitted the form"
-        message += "\n last update time: " + time.strftime("%Y-%m-%d %H:%M:%S", last_form_instance_update_time)
-        message += "\n new update time: " + time.strftime("%Y-%m-%d %H:%M:%S", my_form_instance_update_time)
-        notify_user(message)
+    else:
+        message = "[Error] Failed to submit the form"
+    message += "\n last update time: " + time.strftime("%Y-%m-%d %H:%M:%S", last_form_instance_update_time)
+    message += "\n new update time: " + time.strftime("%Y-%m-%d %H:%M:%S", my_form_instance_update_time)
+    notify_user(message)
