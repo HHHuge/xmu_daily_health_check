@@ -31,7 +31,6 @@
 
 2. 安装 python 依赖
    
-    ```
    
    ```python
    pip install -r requirements.txt
@@ -64,4 +63,3 @@ crontab -e
 >>> 15 8 * * * python main.py
 ```
 
-``
