@@ -90,15 +90,23 @@ if __name__ == "__main__":
     if not success:
         notify_user("[ERROR] Login to IDS failed")
         exit(1)
-    response = client.get(CAS_AUTH_URL, follow_redirects=True)
+    client.get(CAS_AUTH_URL, follow_redirects=True)
 
     # get the daily health check form
     daily_health_check_form_url = BASE_URL + "/api/apps/214/settings/forms"
-    my_form_instance_url = BASE_URL + "/api/formEngine/business/2382/myFormInstance"
+    get_form_id_url = BASE_URL + "/api/app/214/business/now?getFirst=true"
+    response = client.get(get_form_id_url)
+    form_business_id = response.json()["data"][0]["business"]["id"]
+    submit_history = response.json()["data"][0]["business"]["businessTimeList"]
+
+    my_form_instance_url = BASE_URL + f"/api/formEngine/business/{form_business_id}/myFormInstance"
     client.headers.update({"referer": "https://xmuxg.xmu.edu.cn/app/214"})
 
     my_form_instance = client.get(my_form_instance_url).json()
     forms = client.get(daily_health_check_form_url).json()
+    tmp_forms = {"formData": forms["data"]["components"]}
+    parse_opt(tmp_forms,
+              ["日期date.initialization.properties.fixedValue=0"])  # set the date to 0, keep the date unchanged
 
     # ensure the form is the same as previous
     if not os.path.exists("form_template.json"):
@@ -122,10 +130,11 @@ if __name__ == "__main__":
 
     # submit the form
     my_form_instance_id = my_form_instance["data"]["id"]
-    [x for x in post_data["formData"] if x["name"] == "datetime_1611146487222"][0]["value"]["dateValue"] = \
-        time.strftime("%Y-%m-%d %H:%M:%S", last_form_instance_update_time)
     post_url = BASE_URL + f"/api/formEngine/formInstance/{my_form_instance_id}"
-    # post_data = json.loads(open("submit.json", "r").read())
+    post_data = parse_opt(post_data,
+                          [f"日期date.value.stringValue={time.strftime('%Y%m%d', time.localtime())}",
+                           f"datetime_1611146487222.value.dateValue={time.strftime('%Y-%m-%d %H:%M:%S', last_form_instance_update_time)}"])
+
     response = client.post(post_url, json=post_data)
     submit_result = response.json()["data"] == "success"
     if not submit_result:
@@ -148,4 +157,5 @@ if __name__ == "__main__":
         message = "[Error] Failed to submit the form"
     message += "\n last update time: " + time.strftime("%Y-%m-%d %H:%M:%S", last_form_instance_update_time)
     message += "\n new update time: " + time.strftime("%Y-%m-%d %H:%M:%S", my_form_instance_update_time)
+    message += "\n You have submitted " + str(len(submit_history)) + " days ago"
     notify_user(message)
